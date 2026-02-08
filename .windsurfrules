@@ -1,0 +1,10 @@
+Known Constraints & Logic Quirks
+The "wcw" Passkey: Hardcoded in App.tsx. Any administrative state change (Save, Delete, Sync) triggers an authModal.
+Scoring Sequentiality: Points are not calculated in isolation. Because of "Hat-tricks" (every 3rd low) and "Lowest Weight" tracking, the engine must process weights chronologically from Week 1 to the Current Week.
+CSV Structure: The parser expects: Rank, Name, Team, Week 1 Weight, Goal 1 (ignored), Week 2 Weight, Goal 2....
+Date Handling: GAME_WEEKS_DATES in constants.ts uses string keys. The system handles year-rollover (e.g., Oct to Jan) by checking the current month.
+Multi-CSV Architecture: Three separate data sources (main, adjustments, withdrawn) loaded independently with no persistence.
+Team Adjustments: Schema "Team Name,Week Number,Goals,Remarks". Multiple entries per team/week are summed together.
+Forecast Weight Loss: Parameterized at 2kg via FORECAST_WEIGHT_LOSS constant in scoring.ts.
+Withdrawn Players: Same schema as main CSV but displayed separately with rose theme and historical preservation.
+State Management: All data is in-memory only, resets on page refresh. No localStorage or GitHub API usage.
