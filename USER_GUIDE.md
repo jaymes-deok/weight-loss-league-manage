@@ -228,3 +228,4 @@ If you encounter issues not covered in this guide:
 ---
 
 *This guide covers all features of the Fit5 Weight Loss League Tracker. For technical details, see the README-DEV.md file.*
+
