@@ -45,6 +45,7 @@ export interface Team {
   top10Actual: number;
   top10Latest: number;
   top10Forecast: number;
+  allPlayersLatest: number;
   totalWeightLoss: number;
 }
 

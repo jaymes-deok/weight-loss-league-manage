@@ -245,10 +245,18 @@ const App: React.FC = () => {
 
       const top10Forecast = top10Season.reduce((sum, p) => sum + p.stats.forecastPoints, 0);
 
+      // Calculate aggregated yield of all players with weight data for current week
+      const playersWithCurrentWeekData = teamPlayers.filter(player => {
+        const currentWeekIndex = currentWeek - 1;
+        return currentWeekIndex < player.weights.length && player.weights[currentWeekIndex].weight !== null;
+      });
+      const allPlayersLatestYield = playersWithCurrentWeekData.reduce((sum, p) => sum + p.stats.latestWeekPoints, 0);
+
       // Add manual adjustments for current week
       const currentWeekAdjustment = getTeamAdjustmentTotal(teamAdjustments, name, currentWeek);
       const adjustedTop10Latest = top10Latest + currentWeekAdjustment;
       const adjustedTop10Actual = top10Actual + currentWeekAdjustment;
+      const adjustedAllPlayersLatestYield = allPlayersLatestYield + currentWeekAdjustment;
 
       const weeklyPointsTrend = Array.from({ length: currentWeek }, (_, weekIdx) => {
         const weekNumber = weekIdx + 1;
@@ -274,6 +282,7 @@ const App: React.FC = () => {
         top10Actual: adjustedTop10Actual,
         top10Latest: adjustedTop10Latest,
         top10Forecast,
+        allPlayersLatest: adjustedAllPlayersLatestYield,
         weeklyPointsTrend,
         avgBonusPerWeek: currentWeek > 0 ? adjustedTop10Actual / currentWeek : 0,
         totalWeightLoss: teamPlayers.reduce((sum, p) => sum + p.stats.weightLossKg, 0)
@@ -490,11 +499,15 @@ const App: React.FC = () => {
                 let playersToShow = [];
                 let viewTitle = "";
                 if (teamSubView === 'actual') {
-                  playersToShow = [...team.players].sort((a,b) => b.stats.latestWeekPoints - a.stats.latestWeekPoints).slice(0, 10);
-                  viewTitle = `W${currentWeek} Net Yield Contributors`;
+                  // Show all players with weight data for current week
+                  playersToShow = [...team.players].filter(player => {
+                    const currentWeekIndex = currentWeek - 1;
+                    return currentWeekIndex < player.weights.length && player.weights[currentWeekIndex].weight !== null;
+                  }).sort((a,b) => b.stats.latestWeekPoints - a.stats.latestWeekPoints);
+                  viewTitle = `W${currentWeek} All Players Yield (${playersToShow.length} with weight data)`;
                 } else if (teamSubView === 'forecast') {
                   playersToShow = [...team.players].sort((a,b) => b.stats.forecastPoints - a.stats.forecastPoints).slice(0, 10);
-                  viewTitle = `High-Potential Target Athletes`;
+                  viewTitle = `W${currentWeek + 1} Top 10 Potential`;
                 } else {
                   playersToShow = [...team.players].sort((a,b) => b.stats.actualPoints - a.stats.actualPoints).slice(0, 10);
                   viewTitle = "Season Top 10 Athletes (Net Goals)";
@@ -530,7 +543,7 @@ const App: React.FC = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div onClick={() => { if(isExpanded) setTeamSubView('actual'); else { setExpandedTeamId(team.name); setTeamSubView('actual'); } }} className={`cursor-pointer border-[3px] rounded-[2rem] p-6 text-center transition-all hover:scale-105 ${teamSubView === 'actual' && isExpanded ? 'bg-emerald-600 border-emerald-400 text-white shadow-xl shadow-emerald-100' : 'bg-emerald-50 border-emerald-100 shadow-sm shadow-emerald-50'}`}>
                             <p className={`text-[9px] font-black uppercase tracking-widest mb-2 ${teamSubView === 'actual' && isExpanded ? 'text-emerald-100' : 'text-emerald-600'}`}>W{currentWeek} Net Yield</p>
-                            <span className="text-2xl font-black">{team.top10Latest > 0 ? `+${team.top10Latest}` : team.top10Latest}</span>
+                            <span className="text-2xl font-black">{teamSubView === 'actual' && isExpanded ? (team.allPlayersLatest > 0 ? `+${team.allPlayersLatest}` : team.allPlayersLatest) : (team.top10Latest > 0 ? `+${team.top10Latest}` : team.top10Latest)}</span>
                           </div>
                           <div onClick={() => { if(isExpanded) setTeamSubView('forecast'); else { setExpandedTeamId(team.name); setTeamSubView('forecast'); } }} className={`cursor-pointer border-[3px] rounded-[2rem] p-6 text-center transition-all hover:scale-105 ${teamSubView === 'forecast' && isExpanded ? 'bg-indigo-600 border-indigo-400 text-white shadow-xl shadow-indigo-100' : 'bg-indigo-50/50 border-indigo-100 shadow-sm shadow-indigo-50'}`}>
                             <p className={`text-[9px] font-black uppercase tracking-widest mb-2 ${teamSubView === 'forecast' && isExpanded ? 'text-indigo-100' : 'text-indigo-600'}`}>W{currentWeek + 1} Potential</p>
